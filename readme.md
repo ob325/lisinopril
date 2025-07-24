@@ -255,9 +255,6 @@ renderTranslateExecuteSql(
   cdmSchema = cdmSchema)
 ```
 
-\| \| \| 0% \|
-\|======================================================================\|
-100%
 
 ``` r
 renderTranslateExecuteSql(
@@ -268,9 +265,6 @@ renderTranslateExecuteSql(
   cdmSchema = cdmSchema)
 ```
 
-\| \| \| 0% \|
-\|======================================================================\|
-100%
 
 # Find standard concept ids
 
