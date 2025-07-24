@@ -28,8 +28,6 @@ library(CohortGenerator)
 library(Capr)
 library(CohortIncidence)
 library(Eunomia)
-library(dplyr) 
-library(DT)
 
 cdmSchema <- "main"
 cohortSchema <- "main" 
