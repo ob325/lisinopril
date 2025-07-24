@@ -11,6 +11,8 @@ The purpose of this research notebook is to demonstrate a reproducible program t
 
 # R libraries and setup 
 
+The tangled R code of this notebook is in ./lisinoprilScript.R 
+
 This study uses renv for reproducibility. Re-create the R library by running: 
 
 ```{r eval = FALSE}
@@ -18,10 +20,6 @@ This study uses renv for reproducibility. Re-create the R library by running:
 renv::restore()
 
 ```
-
-
-The environmental variables are to mask potentially sensitive server names
-
 
 ```{r output=FALSE, message=FALSE, warning=FALSE}
 

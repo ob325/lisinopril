@@ -10,15 +10,14 @@ first drug exposure to lisinopril.
 
 # R libraries and setup
 
+The tangled R code of this notebook is in ./lisinoprilScript.R
+
 This study uses renv for reproducibility. Re-create the R library by
 running:
 
 ``` r
 renv::restore()
 ```
-
-The environmental variables are to mask potentially sensitive server
-names
 
 ``` r
 rm(list=ls())
@@ -256,6 +255,9 @@ renderTranslateExecuteSql(
   cdmSchema = cdmSchema)
 ```
 
+\| \| \| 0% \|
+\|======================================================================\|
+100%
 
 ``` r
 renderTranslateExecuteSql(
@@ -265,6 +267,10 @@ renderTranslateExecuteSql(
    where concept_id = 192671;",
   cdmSchema = cdmSchema)
 ```
+
+\| \| \| 0% \|
+\|======================================================================\|
+100%
 
 # Find standard concept ids
 
