@@ -44,7 +44,7 @@ connectionDetails <- getEunomiaConnectionDetails()
 connection <- connect(connectionDetails)
 ```
 
-# Eunomia “customization”
+# Eunomia customization
 
 I am using the synthetic Eunomia CDM for testing. But there is a
 problem… Eunomia was designed for running the model GI bleed study and
@@ -94,9 +94,7 @@ renderTranslateExecuteSql(
   cdmSchema = cdmSchema)
 ```
 
-\| \| \| 0% \|
-\|======================================================================\|
-100%
+
 
 ``` r
 renderTranslateExecuteSql(
@@ -107,9 +105,7 @@ renderTranslateExecuteSql(
   cdmSchema = cdmSchema)
 ```
 
-\| \| \| 0% \|
-\|======================================================================\|
-100%
+
 
 # Find standard concept ids
 
