@@ -351,7 +351,7 @@ str(angioedemaCs@Expression)
 
 # Cohort definitions
 
-## Lisonipril cohort
+## Lisinopril cohort
 
 The target cohort is people with their first drug exposure to the
 ingredient lisinopril. Exit is 1 year after first exposure, so they
