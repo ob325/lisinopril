@@ -364,7 +364,7 @@ presume this is not a pediatric study.
 I would ask here if we want to exclude from the cohort anyone with prior
 angioedema or other drug exposures that are associated with angioedema
 risk, but the exercise does not specify so I will leave attrition as
-NULL. Over-exclusion is to be done with caution because it can introduce
+NULL. Over-exclusion should be avoided because it can introduce
 selection bias, so in this case I would rather do a stratified analysis
 or sensitivity analysis.
 
