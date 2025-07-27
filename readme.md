@@ -127,7 +127,7 @@ using the graphical tools:
 <img src="./athena.png" alt="Athena" />
 <figcaption aria-hidden="true">Athena</figcaption>
 </figure>
-
+<p>
 My preference though is to do this programatically with Hades. I know
 that lisinopril is an ACE commonly prescribed to treat hypertension and
 a few other conditions. The OHDSI standard vocabulary for drugs is
