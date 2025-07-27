@@ -1,4 +1,4 @@
-Angioedema incidence after first exposure to lisinopril
+Angioedema incidence rate after first exposure to lisinopril
 ================
 William J. O’Brien
 
@@ -10,7 +10,8 @@ first drug exposure to lisinopril.
 
 # R libraries and setup
 
-The tangled R code of this notebook is in ./lisinoprilScript.R
+If one wanted to `source()` this code from another script, the tangled R
+code is in ./lisinoprilScript.R
 
 This study uses renv for reproducibility. Re-create the R library by
 running:
@@ -28,12 +29,11 @@ library(CohortGenerator)
 library(Capr)
 library(CohortIncidence)
 library(Eunomia)
+library(knitr)
 
 cdmSchema <- "main"
 cohortSchema <- "main" 
 cohortTableName <- "lisinopril"
-
-niceTable <- function(x) kableExtra::kable_styling(knitr::kable(x))
 ```
 
 # Database connection
@@ -56,193 +56,34 @@ a real CDM.
 
 ``` r
 renderTranslateQuerySql(connection, 
-                        "select * from @cdmSchema.concept 
+                        "select concept_id,
+                           concept_name,
+                           standard_concept
+                         from @cdmSchema.concept 
                          where concept_name like 'diclofenac'",
                         cdmSchema = cdmSchema) |>
-  niceTable()
+  kable() 
 ```
 
-<table class="table" style="color: black; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-CONCEPT_ID
-</th>
-<th style="text-align:left;">
-CONCEPT_NAME
-</th>
-<th style="text-align:left;">
-DOMAIN_ID
-</th>
-<th style="text-align:left;">
-VOCABULARY_ID
-</th>
-<th style="text-align:left;">
-CONCEPT_CLASS_ID
-</th>
-<th style="text-align:left;">
-STANDARD_CONCEPT
-</th>
-<th style="text-align:left;">
-CONCEPT_CODE
-</th>
-<th style="text-align:left;">
-VALID_START_DATE
-</th>
-<th style="text-align:left;">
-VALID_END_DATE
-</th>
-<th style="text-align:left;">
-INVALID_REASON
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-1124300
-</td>
-<td style="text-align:left;">
-Diclofenac
-</td>
-<td style="text-align:left;">
-Drug
-</td>
-<td style="text-align:left;">
-RxNorm
-</td>
-<td style="text-align:left;">
-Ingredient
-</td>
-<td style="text-align:left;">
-S
-</td>
-<td style="text-align:left;">
-3355
-</td>
-<td style="text-align:left;">
-1970-01-01
-</td>
-<td style="text-align:left;">
-2099-12-31
-</td>
-<td style="text-align:left;">
-NA
-</td>
-</tr>
-</tbody>
-</table>
+| CONCEPT_ID | CONCEPT_NAME | STANDARD_CONCEPT |
+|-----------:|:-------------|:-----------------|
+|    1124300 | Diclofenac   | S                |
 
 ``` r
 renderTranslateQuerySql(connection, 
-                        "select * from @cdmSchema.concept 
+                        "select concept_id,
+                           concept_name,
+                           standard_concept
+                         from @cdmSchema.concept 
                         where concept_name like '%gastro%'",
                         cdmSchema = cdmSchema) |>
-  niceTable()
+  kable()
 ```
 
-<table class="table" style="color: black; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-CONCEPT_ID
-</th>
-<th style="text-align:left;">
-CONCEPT_NAME
-</th>
-<th style="text-align:left;">
-DOMAIN_ID
-</th>
-<th style="text-align:left;">
-VOCABULARY_ID
-</th>
-<th style="text-align:left;">
-CONCEPT_CLASS_ID
-</th>
-<th style="text-align:left;">
-STANDARD_CONCEPT
-</th>
-<th style="text-align:left;">
-CONCEPT_CODE
-</th>
-<th style="text-align:left;">
-VALID_START_DATE
-</th>
-<th style="text-align:left;">
-VALID_END_DATE
-</th>
-<th style="text-align:left;">
-INVALID_REASON
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-35208414
-</td>
-<td style="text-align:left;">
-Gastrointestinal hemorrhage, unspecified
-</td>
-<td style="text-align:left;">
-Condition
-</td>
-<td style="text-align:left;">
-ICD10CM
-</td>
-<td style="text-align:left;">
-4-char billing code
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-K92.2
-</td>
-<td style="text-align:left;">
-2007-01-01
-</td>
-<td style="text-align:left;">
-2099-12-31
-</td>
-<td style="text-align:left;">
-NA
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-192671
-</td>
-<td style="text-align:left;">
-Gastrointestinal hemorrhage
-</td>
-<td style="text-align:left;">
-Condition
-</td>
-<td style="text-align:left;">
-SNOMED
-</td>
-<td style="text-align:left;">
-Clinical Finding
-</td>
-<td style="text-align:left;">
-S
-</td>
-<td style="text-align:left;">
-74474003
-</td>
-<td style="text-align:left;">
-1970-01-01
-</td>
-<td style="text-align:left;">
-2099-12-31
-</td>
-<td style="text-align:left;">
-NA
-</td>
-</tr>
-</tbody>
-</table>
+| CONCEPT_ID | CONCEPT_NAME                             | STANDARD_CONCEPT |
+|-----------:|:-----------------------------------------|:-----------------|
+|   35208414 | Gastrointestinal hemorrhage, unspecified | NA               |
+|     192671 | Gastrointestinal hemorrhage              | S                |
 
 ``` r
 renderTranslateExecuteSql(
@@ -253,6 +94,9 @@ renderTranslateExecuteSql(
   cdmSchema = cdmSchema)
 ```
 
+\| \| \| 0% \|
+\|======================================================================\|
+100%
 
 ``` r
 renderTranslateExecuteSql(
@@ -263,106 +107,82 @@ renderTranslateExecuteSql(
   cdmSchema = cdmSchema)
 ```
 
+\| \| \| 0% \|
+\|======================================================================\|
+100%
 
 # Find standard concept ids
 
-## Lisinopril
+There are two excellent OHDSI options at this point. I could use Atlas
+or Athena to search the standard vocabulary, Atlas to build concept
+sets, define cohorts, then execute the study. I believe Atlas is the
+approach we should be focusing on to attract researchers into the
+community.
+
+Here is how I would identify the exposure standard concept if I were
+using the graphical tools:
+
+<figure>
+<img src="./atlas.png" alt="Atlas" />
+<figcaption aria-hidden="true">Atlas</figcaption>
+</figure>
+
+<figure>
+<img src="./athena.png" alt="Athena" />
+<figcaption aria-hidden="true">Athena</figcaption>
+</figure>
+
+My preference though is to do this programatically with Hades. I know
+that lisinopril is an ACE commonly prescribed to treat hypertension and
+a few other conditions. The OHDSI standard vocabulary for drugs is
+RxNorm, so I will search for rows in the concept table where
+vocabulary_id is “RxNorm,” the domain_id is “Drug,” the concept_class_id
+is “Ingredient,” and the standard_vocabulary column is “S”.
+
+I will use the ontological mappings of the concept_ancestor table to
+obtain all drug exposures containing ingredient lisinopril. The utility
+of this cannot be overstated. In the EHR, the drug exposures of interest
+will be represented by a vast number of generic vs. brand names, doses,
+and combinations with other active ingredients that would take a great
+amount of time and cost to curate. In an international collaboration, I
+would have to worry that some of my colleagues might call the drug
+λισινοπρίλη, and others call it 赖诺普利. In an OHDSI study, we all
+agree it is standard concept_id 1308216, completely disambiguated.
 
 My use of the SqlRender functions in these queries is so that other
-organizations can run it as-is without refactoring for different sql
-dialects
+organizations can run it as-is without refactoring for different SQL
+dialects.
+
+## Lisinopril standard concept
+
+In my modified Eunomia, this will not return the “real” concept_id for
+lisinopril that I noted above.
 
 ``` r
 renderTranslateQuerySql(
   connection, 
-  "select * 
+  "select concept_id,
+     concept_name,
+     standard_concept 
    from @cdmSchema.concept 
    where concept_name = 'Lisinopril'
      and domain_id = 'Drug'
      and concept_class_id = 'Ingredient'
      and standard_concept = 'S'",
   cdmSchema = cdmSchema) |>
-  niceTable()
+  kable()
 ```
 
-<table class="table" style="color: black; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-CONCEPT_ID
-</th>
-<th style="text-align:left;">
-CONCEPT_NAME
-</th>
-<th style="text-align:left;">
-DOMAIN_ID
-</th>
-<th style="text-align:left;">
-VOCABULARY_ID
-</th>
-<th style="text-align:left;">
-CONCEPT_CLASS_ID
-</th>
-<th style="text-align:left;">
-STANDARD_CONCEPT
-</th>
-<th style="text-align:left;">
-CONCEPT_CODE
-</th>
-<th style="text-align:left;">
-VALID_START_DATE
-</th>
-<th style="text-align:left;">
-VALID_END_DATE
-</th>
-<th style="text-align:left;">
-INVALID_REASON
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-1124300
-</td>
-<td style="text-align:left;">
-Lisinopril
-</td>
-<td style="text-align:left;">
-Drug
-</td>
-<td style="text-align:left;">
-RxNorm
-</td>
-<td style="text-align:left;">
-Ingredient
-</td>
-<td style="text-align:left;">
-S
-</td>
-<td style="text-align:left;">
-3355
-</td>
-<td style="text-align:left;">
-1970-01-01
-</td>
-<td style="text-align:left;">
-2099-12-31
-</td>
-<td style="text-align:left;">
-NA
-</td>
-</tr>
-</tbody>
-</table>
+| CONCEPT_ID | CONCEPT_NAME | STANDARD_CONCEPT |
+|-----------:|:-------------|:-----------------|
+|    1124300 | Lisinopril   | S                |
 
 ``` r
 lisinoprilConcept <- 1124300
 ```
 
-What are the descendants?
-
-I always review these to get a sense of:
+What are the descendants? I always review these (either in Athena or
+with SQL queries) to get a sense of:
 
 - sheer number of formulations/brands we are dealing with
 
@@ -384,118 +204,39 @@ renderTranslateQuerySql(
    where ancestor_concept_id = @lisinoprilConcept",
   cdmSchema = cdmSchema,
   lisinoprilConcept = lisinoprilConcept) |>
-  niceTable() 
+  kable() 
 ```
 
-<table class="table" style="color: black; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-DESCENDANT_CONCEPT_ID
-</th>
-<th style="text-align:left;">
-DESCENDANT_CONCEPT_NAME
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-1124300
-</td>
-<td style="text-align:left;">
-Lisinopril
-</td>
-</tr>
-</tbody>
-</table>
+| DESCENDANT_CONCEPT_ID | DESCENDANT_CONCEPT_NAME |
+|----------------------:|:------------------------|
+|               1124300 | Lisinopril              |
 
-Results: there are no descendants of the target concept in Eunomia
+Results: there are no descendants of the target concept in Eunomia, but
+many in a real CDM
 
-## Angioedema
+## Angioedema standard concept
+
+I use the same approach to look for the outcome concept. Angioedema is
+something that would be diagnosed, so I know to look in the condition
+domain for a standard SNOMED code.
 
 ``` r
 renderTranslateQuerySql(
   connection, 
-  "select * 
+  "select concept_id,
+     concept_name,
+     standard_concept
    from @cdmSchema.concept 
    where concept_name = 'Angioedema'
      and domain_id = 'Condition'
      and standard_concept = 'S'",
   cdmSchema = cdmSchema) |>
-  niceTable()
+  kable()
 ```
 
-<table class="table" style="color: black; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-CONCEPT_ID
-</th>
-<th style="text-align:left;">
-CONCEPT_NAME
-</th>
-<th style="text-align:left;">
-DOMAIN_ID
-</th>
-<th style="text-align:left;">
-VOCABULARY_ID
-</th>
-<th style="text-align:left;">
-CONCEPT_CLASS_ID
-</th>
-<th style="text-align:left;">
-STANDARD_CONCEPT
-</th>
-<th style="text-align:left;">
-CONCEPT_CODE
-</th>
-<th style="text-align:left;">
-VALID_START_DATE
-</th>
-<th style="text-align:left;">
-VALID_END_DATE
-</th>
-<th style="text-align:left;">
-INVALID_REASON
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-192671
-</td>
-<td style="text-align:left;">
-Angioedema
-</td>
-<td style="text-align:left;">
-Condition
-</td>
-<td style="text-align:left;">
-SNOMED
-</td>
-<td style="text-align:left;">
-Clinical Finding
-</td>
-<td style="text-align:left;">
-S
-</td>
-<td style="text-align:left;">
-74474003
-</td>
-<td style="text-align:left;">
-1970-01-01
-</td>
-<td style="text-align:left;">
-2099-12-31
-</td>
-<td style="text-align:left;">
-NA
-</td>
-</tr>
-</tbody>
-</table>
+| CONCEPT_ID | CONCEPT_NAME | STANDARD_CONCEPT |
+|-----------:|:-------------|:-----------------|
+|     192671 | Angioedema   | S                |
 
 ``` r
 angioedemaConcept <- 192671
@@ -517,31 +258,12 @@ renderTranslateQuerySql(
    where ancestor_concept_id = @angioedemaConcept",
   cdmSchema = cdmSchema,
   angioedemaConcept = angioedemaConcept) |>
-  niceTable() 
+  kable() 
 ```
 
-<table class="table" style="color: black; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-DESCENDANT_CONCEPT_ID
-</th>
-<th style="text-align:left;">
-DESCENDANT_CONCEPT_NAME
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-192671
-</td>
-<td style="text-align:left;">
-Angioedema
-</td>
-</tr>
-</tbody>
-</table>
+| DESCENDANT_CONCEPT_ID | DESCENDANT_CONCEPT_NAME |
+|----------------------:|:------------------------|
+|                192671 | Angioedema              |
 
 ``` r
 hereditaryAngioedemaConcept <- 4307793
@@ -549,28 +271,46 @@ hereditaryAngioedemaConcept <- 4307793
 
 # Concept sets
 
-## Lisinopril
+Here I use the standard concepts to build the concept set, which is a
+collection of concepts with additional data on whether the concepts are
+to be excluded, whether to use descendants of the standard concept, or
+to use other concepts that are mapped to it.
 
 I like to pull the concept details after creating the concept set so
-they are clearly labelled
+they are clearly labelled. It is not crucial, but a nice Capr
+convenience.
+
+## Lisinopril concept set
 
 ``` r
 lisinoprilCs <- cs(descendants(lisinoprilConcept), 
                    name = 'linosoprilCs') |>
   getConceptSetDetails(connection, cdmSchema) 
 
-lisinoprilCs 
+str(lisinoprilCs@Expression)
 ```
 
-    ## ── <Capr Concept Set> linosoprilCs ─────────────────────────────────────────────
-    ## # A tibble: 1 × 9
-    ##   conceptId conceptCode conceptName domainId vocabularyId standardConcept
-    ##       <int> <chr>       <chr>       <chr>    <chr>        <chr>          
-    ## 1   1124300 3355        Lisinopril  Drug     RxNorm       S              
-    ## # ℹ 3 more variables: includeDescendants <lgl>, isExcluded <lgl>,
-    ## #   includeMapped <lgl>
+    ## List of 1
+    ##  $ :Formal class 'ConceptSetItem' [package "Capr"] with 4 slots
+    ##   .. ..@ Concept           :Formal class 'Concept' [package "Capr"] with 10 slots
+    ##   .. .. .. ..@ concept_id              : int 1124300
+    ##   .. .. .. ..@ concept_name            : chr "Lisinopril"
+    ##   .. .. .. ..@ standard_concept        : chr "S"
+    ##   .. .. .. ..@ standard_concept_caption: chr "Standard"
+    ##   .. .. .. ..@ invalid_reason          : chr "V"
+    ##   .. .. .. ..@ invalid_reason_caption  : chr "Valid"
+    ##   .. .. .. ..@ concept_code            : chr "3355"
+    ##   .. .. .. ..@ domain_id               : chr "Drug"
+    ##   .. .. .. ..@ vocabulary_id           : chr "RxNorm"
+    ##   .. .. .. ..@ concept_class_id        : chr "Ingredient"
+    ##   .. ..@ isExcluded        : logi FALSE
+    ##   .. ..@ includeDescendants: logi TRUE
+    ##   .. ..@ includeMapped     : logi FALSE
 
-## Angioedema
+## Angioedema concept set
+
+The @isExcluded slot in this S4 class means that we want to exclude that
+hereditary angioedema concept.
 
 ``` r
 angioedemaCs <- cs(descendants(angioedemaConcept),
@@ -578,31 +318,59 @@ angioedemaCs <- cs(descendants(angioedemaConcept),
                    name = 'angioedemaCs') |>
   getConceptSetDetails(connection, cdmSchema)
 
-angioedemaCs 
+str(angioedemaCs@Expression)
 ```
 
-    ## ── <Capr Concept Set> angioedemaCs ─────────────────────────────────────────────
-    ## # A tibble: 2 × 9
-    ##   conceptId conceptCode conceptName  domainId    vocabularyId standardConcept
-    ##       <int> <chr>       <chr>        <chr>       <chr>        <chr>          
-    ## 1    192671 "74474003"  "Angioedema" "Condition" "SNOMED"     "S"            
-    ## 2   4307793 ""          ""           ""          ""           ""             
-    ## # ℹ 3 more variables: includeDescendants <lgl>, isExcluded <lgl>,
-    ## #   includeMapped <lgl>
+    ## List of 2
+    ##  $ :Formal class 'ConceptSetItem' [package "Capr"] with 4 slots
+    ##   .. ..@ Concept           :Formal class 'Concept' [package "Capr"] with 10 slots
+    ##   .. .. .. ..@ concept_id              : int 192671
+    ##   .. .. .. ..@ concept_name            : chr "Angioedema"
+    ##   .. .. .. ..@ standard_concept        : chr "S"
+    ##   .. .. .. ..@ standard_concept_caption: chr "Standard"
+    ##   .. .. .. ..@ invalid_reason          : chr "V"
+    ##   .. .. .. ..@ invalid_reason_caption  : chr "Valid"
+    ##   .. .. .. ..@ concept_code            : chr "74474003"
+    ##   .. .. .. ..@ domain_id               : chr "Condition"
+    ##   .. .. .. ..@ vocabulary_id           : chr "SNOMED"
+    ##   .. .. .. ..@ concept_class_id        : chr "Clinical Finding"
+    ##   .. ..@ isExcluded        : logi FALSE
+    ##   .. ..@ includeDescendants: logi TRUE
+    ##   .. ..@ includeMapped     : logi FALSE
+    ##  $ :Formal class 'ConceptSetItem' [package "Capr"] with 4 slots
+    ##   .. ..@ Concept           :Formal class 'Concept' [package "Capr"] with 10 slots
+    ##   .. .. .. ..@ concept_id              : int 4307793
+    ##   .. .. .. ..@ concept_name            : chr ""
+    ##   .. .. .. ..@ standard_concept        : chr ""
+    ##   .. .. .. ..@ standard_concept_caption: chr ""
+    ##   .. .. .. ..@ invalid_reason          : chr ""
+    ##   .. .. .. ..@ invalid_reason_caption  : chr ""
+    ##   .. .. .. ..@ concept_code            : chr ""
+    ##   .. .. .. ..@ domain_id               : chr ""
+    ##   .. .. .. ..@ vocabulary_id           : chr ""
+    ##   .. .. .. ..@ concept_class_id        : chr ""
+    ##   .. ..@ isExcluded        : logi TRUE
+    ##   .. ..@ includeDescendants: logi FALSE
+    ##   .. ..@ includeMapped     : logi FALSE
 
 # Cohort definitions
 
-## Target: lisinopril
+## Lisonipril cohort
 
 The target cohort is people with their first drug exposure to the
 ingredient lisinopril. Exit is 1 year after first exposure, so they
 remain in the cohort whether or not they continue the medication. To
 have reasonable assurance it is their first exposure, I will use an
-attribute (in Capr-speak) to the cohort entry query that requires one
-year of prior continous observation. I also include an age attribute
-because I presume this is not a pediatric study. I would ask here if we
-want to exclude from the cohort anyone with prior angioedema, but the
-exercise does not specify so I will leave attrition as NULL.
+attribute to the cohort entry query that requires one year of prior
+continuous observation. I also include an age attribute because I
+presume this is not a pediatric study.
+
+I would ask here if we want to exclude from the cohort anyone with prior
+angioedema or other drug exposures that are associated with angioedema
+risk, but the exercise does not specify so I will leave attrition as
+NULL. Over-exclusion is to be done with caution because it can introduce
+selection bias, so in this case I would rather do a stratified analysis
+or sensitivity analysis.
 
 ``` r
 targetCohort <- cohort(
@@ -615,11 +383,19 @@ targetCohort <- cohort(
   era = NULL) 
 ```
 
-## Event: angioedema
+## Angioedema cohort
 
 This includes all condition occurrences for the event, and one person
-can appear in many rows. Cohort duration is arbitrarily one day, as only
-the entry date matters here.
+can appear in many rows before/during/after their lisinopril cohort
+interval. Cohort duration is arbitrarily one day, as only the entry date
+matters here.
+
+There are many other criteria we could add to this query. Looking at the
+[OHDSI Phenotype Library](https://data.ohdsi.org/PhenotypeLibrary/)
+cohort \#220, they use such inclusion criteria as no recent cellulitis,
+no cardiac edema, and no recent insect bites. Based on personal
+experience, I lean toward straightforward cohort definitions instead of
+complex nested criteria when possible.
 
 ``` r
 eventCohort <- cohort(
@@ -631,11 +407,25 @@ eventCohort <- cohort(
 
 ## Cohort set
 
+The final step in cohort definition is to bundle them in a cohort set
+object as input to the next section.
+
 ``` r
 cohortSet <- makeCohortSet(targetCohort, eventCohort)
 ```
 
 # Cohort generation
+
+In my Capr cohort building approach, these concise intuitive function
+calls have not actually “done” anything in the sense of generating study
+data. Rather they have returned a set of complex OHDSI SQL queries,
+which can be put through SqlRender to generate executable SQL in a
+number of different relational database systems. One could, in theory,
+simply write all this SQL tediously by hand.
+
+In this section we take the cohort objects generated by Capr, and use
+them as input to the CohortGenerator functions, which have the side
+effect of writing cohort data and metadata to the server.
 
 ``` r
 cohortTableNames <- getCohortTableNames(cohortTable = cohortTableName)
@@ -651,7 +441,8 @@ generateCohortSet(connectionDetails = connectionDetails,
                   cohortDefinitionSet = cohortSet) 
 ```
 
-How many entries are in each cohort?
+How many entries are in each cohort? There is also a convenient
+`CohortGenerator::cohortCount` function that could be used.
 
 ``` r
 renderTranslateQuerySql(
@@ -662,41 +453,22 @@ renderTranslateQuerySql(
    group by cohort_definition_id",
   cohortSchema = cohortSchema,
   cohortTableName = cohortTableName) |>
-  niceTable()
+  kable()
 ```
 
-<table class="table" style="color: black; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-COHORT_DEFINITION_ID
-</th>
-<th style="text-align:right;">
-COUNT(\*)
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-830
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-479
-</td>
-</tr>
-</tbody>
-</table>
+| COHORT_DEFINITION_ID | COUNT(\*) |
+|---------------------:|----------:|
+|                    1 |       830 |
+|                    2 |       479 |
 
 # Incidence rate calculation
+
+There are a few different ways to perform this calculation, which I will
+express as the number of angioedema cases per 100 person-years at risk.
+It would be reasonable to calculate it without too much trouble using
+custom SQL or R functions. But I will use the Hades `CohortIncidence`
+package and closely follow the thoughtful vignette given to us by the
+package creator.
 
 ``` r
 t1 <- createCohortRef(id = 1, name = "Lisinopril cohort")
@@ -735,11 +507,11 @@ incidenceResults <- executeAnalysis(connectionDetails = connectionDetails,
 # Results
 
 ``` r
-sprintf("The incidence rate of angioedema within 1 year after initial lisinopril exposure was %.01f%% (%s/%s)",
-        incidenceResults$incidence_summary$INCIDENCE_PROPORTION_P100P,
-        incidenceResults$incidence_summary$OUTCOMES,
-        incidenceResults$incidence_summary$PERSONS_AT_RISK
+sprintf("The 1-year incidence rate of angioedema after first exposure  
+        to lisinopril was %.01f per 100 person-years",
+        incidenceResults$incidence_summary$INCIDENCE_RATE_P100PY
 )
 ```
 
-    ## [1] "The incidence rate of angioedema within 1 year after initial lisinopril exposure was 14.9% (124/830)"
+\[1\] “The 1-year incidence rate of angioedema after first exposure to
+lisinopril was 15.1 per 100 person-years”

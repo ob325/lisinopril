@@ -1,5 +1,5 @@
 ---
-title: "Angioedema incidence after first exposure to lisinopril"
+title: "Angioedema incidence rate after first exposure to lisinopril"
 author: "William J. O'Brien" 
 output: github_document
 always_allow_html: true
@@ -11,7 +11,7 @@ The purpose of this research notebook is to demonstrate a reproducible program t
 
 # R libraries and setup 
 
-The tangled R code of this notebook is in ./lisinoprilScript.R 
+If one wanted to `source()` this code from another script, the tangled R code is in ./lisinoprilScript.R 
 
 This study uses renv for reproducibility. Re-create the R library by running: 
 
@@ -31,13 +31,11 @@ library(CohortGenerator)
 library(Capr)
 library(CohortIncidence)
 library(Eunomia)
-
+library(knitr)
 
 cdmSchema <- "main"
 cohortSchema <- "main" 
 cohortTableName <- "lisinopril"
-
-niceTable <- function(x) kableExtra::kable_styling(knitr::kable(x))
 
 ```
 
@@ -58,16 +56,22 @@ I am using the synthetic Eunomia CDM for testing. But there is a problem... Euno
 ```{r warning=FALSE, message = FALSE, results='asis'}
 
 renderTranslateQuerySql(connection, 
-                        "select * from @cdmSchema.concept 
+                        "select concept_id,
+                           concept_name,
+                           standard_concept
+                         from @cdmSchema.concept 
                          where concept_name like 'diclofenac'",
                         cdmSchema = cdmSchema) |>
-  niceTable()
+  kable() 
 
 renderTranslateQuerySql(connection, 
-                        "select * from @cdmSchema.concept 
+                        "select concept_id,
+                           concept_name,
+                           standard_concept
+                         from @cdmSchema.concept 
                         where concept_name like '%gastro%'",
                         cdmSchema = cdmSchema) |>
-  niceTable()
+  kable()
 
 ```
 
@@ -91,30 +95,44 @@ renderTranslateExecuteSql(
 
 # Find standard concept ids
 
-## Lisinopril 
+There are two excellent OHDSI options at this point. I could use Atlas or Athena to search the standard vocabulary, Atlas to build concept sets, define cohorts, then execute the study. I believe Atlas is the approach we should be focusing on to attract researchers into the community. 
 
-My use of the SqlRender functions in these queries is so that other organizations can run it as-is without refactoring for different sql dialects
+Here is how I would identify the exposure standard concept if I were using the graphical tools:
+
+![Atlas](./atlas.png)
+
+![Athena](./athena.png)
+
+My preference though is to do this programatically with Hades. I know that lisinopril is an ACE commonly prescribed to treat hypertension and a few other conditions. The OHDSI standard vocabulary for drugs is RxNorm, so I will search for rows in the concept table where vocabulary_id is "RxNorm," the domain_id is "Drug," the concept_class_id is "Ingredient," and the standard_vocabulary column is "S". 
+
+I will use the ontological mappings of the concept_ancestor table to obtain all drug exposures containing ingredient lisinopril. The utility of this cannot be overstated. In the EHR, the drug exposures of interest will be represented by a vast number of generic vs. brand names, doses, and combinations with other active ingredients that would take a great amount of time and cost to curate. In an international collaboration, I would have to worry that some of my colleagues might call the drug λισινοπρίλη, and others call it 赖诺普利. In an OHDSI study, we all agree it is standard concept_id 1308216, completely disambiguated. 
+
+My use of the SqlRender functions in these queries is so that other organizations can run it as-is without refactoring for different SQL dialects.
+
+## Lisinopril standard concept 
+
+In my modified Eunomia, this will not return the "real" concept_id for lisinopril that I noted above.
 
 ```{r warning=FALSE, message = FALSE, results='asis'}
 
 renderTranslateQuerySql(
   connection, 
-  "select * 
+  "select concept_id,
+     concept_name,
+     standard_concept 
    from @cdmSchema.concept 
    where concept_name = 'Lisinopril'
      and domain_id = 'Drug'
      and concept_class_id = 'Ingredient'
      and standard_concept = 'S'",
   cdmSchema = cdmSchema) |>
-  niceTable()
+  kable()
 
 lisinoprilConcept <- 1124300
 
 ```
 
-What are the descendants? 
-
-I always review these to get a sense of:
+What are the descendants? I always review these (either in Athena or with SQL queries) to get a sense of:
 
 - sheer number of formulations/brands we are dealing with
 
@@ -136,25 +154,29 @@ renderTranslateQuerySql(
    where ancestor_concept_id = @lisinoprilConcept",
   cdmSchema = cdmSchema,
   lisinoprilConcept = lisinoprilConcept) |>
-  niceTable() 
+  kable() 
 
 ```
 
-Results: there are no descendants of the target concept in Eunomia 
+Results: there are no descendants of the target concept in Eunomia, but many in a real CDM
 
-## Angioedema 
+## Angioedema standard concept
+
+I use the same approach to look for the outcome concept. Angioedema is something that would be diagnosed, so I know to look in the condition domain for a standard SNOMED code. 
 
 ```{r warning=FALSE, message = FALSE, results='asis'}
 
 renderTranslateQuerySql(
   connection, 
-  "select * 
+  "select concept_id,
+     concept_name,
+     standard_concept
    from @cdmSchema.concept 
    where concept_name = 'Angioedema'
      and domain_id = 'Condition'
      and standard_concept = 'S'",
   cdmSchema = cdmSchema) |>
-  niceTable()
+  kable()
 
 angioedemaConcept <- 192671
 
@@ -174,7 +196,7 @@ renderTranslateQuerySql(
    where ancestor_concept_id = @angioedemaConcept",
   cdmSchema = cdmSchema,
   angioedemaConcept = angioedemaConcept) |>
-  niceTable() 
+  kable() 
 
 hereditaryAngioedemaConcept <- 4307793
 
@@ -182,9 +204,11 @@ hereditaryAngioedemaConcept <- 4307793
 
 # Concept sets 
 
-## Lisinopril 
+Here I use the standard concepts to build the concept set, which is a collection of concepts with additional data on whether the concepts are to be excluded, whether to use descendants of the standard concept, or to use other concepts that are mapped to it. 
 
-I like to pull the concept details after creating the concept set so they are clearly labelled
+I like to pull the concept details after creating the concept set so they are clearly labelled. It is not crucial, but a nice Capr convenience. 
+
+## Lisinopril concept set
 
 ```{r message = FALSE, warning = FALSE}
 
@@ -192,12 +216,13 @@ lisinoprilCs <- cs(descendants(lisinoprilConcept),
                    name = 'linosoprilCs') |>
   getConceptSetDetails(connection, cdmSchema) 
 
-lisinoprilCs 
+str(lisinoprilCs@Expression)
 
 ```
 
+## Angioedema concept set
 
-## Angioedema 
+The @isExcluded slot in this S4 class means that we want to exclude that hereditary angioedema concept. 
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -206,15 +231,17 @@ angioedemaCs <- cs(descendants(angioedemaConcept),
                    name = 'angioedemaCs') |>
   getConceptSetDetails(connection, cdmSchema)
 
-angioedemaCs 
-
+str(angioedemaCs@Expression)
+ 
 ```
 
 # Cohort definitions 
 
-## Target: lisinopril 
+## Lisonipril cohort
 
-The target cohort is people with their first drug exposure to the ingredient lisinopril. Exit is 1 year after first exposure, so they remain in the cohort whether or not they continue the medication. To have reasonable assurance it is their first exposure, I will use an attribute (in Capr-speak) to the cohort entry query that requires one year of prior continous observation. I also include an age attribute because I presume this is not a pediatric study. I would ask here if we want to exclude from the cohort anyone with prior angioedema, but the exercise does not specify so I will leave attrition as NULL. 
+The target cohort is people with their first drug exposure to the ingredient lisinopril. Exit is 1 year after first exposure, so they remain in the cohort whether or not they continue the medication. To have reasonable assurance it is their first exposure, I will use an attribute to the cohort entry query that requires one year of prior continuous observation. I also include an age attribute because I presume this is not a pediatric study. 
+
+I would ask here if we want to exclude from the cohort anyone with prior angioedema or other drug exposures that are associated with angioedema risk, but the exercise does not specify so I will leave attrition as NULL. Over-exclusion is to be done with caution because it can introduce selection bias, so in this case I would rather do a stratified analysis or sensitivity analysis. 
 
 ```{r output=FALSE, message=FALSE, warning=FALSE}
 
@@ -229,9 +256,11 @@ targetCohort <- cohort(
 
 ```
 
-## Event: angioedema 
+## Angioedema cohort
 
-This includes all condition occurrences for the event, and one person can appear in many rows. Cohort duration is arbitrarily one day, as only the entry date matters here. 
+This includes all condition occurrences for the event, and one person can appear in many rows before/during/after their lisinopril cohort interval. Cohort duration is arbitrarily one day, as only the entry date matters here. 
+
+There are many other criteria we could add to this query. Looking at the [OHDSI Phenotype Library ](https://data.ohdsi.org/PhenotypeLibrary/) cohort #220, they use such inclusion criteria as no recent cellulitis, no cardiac edema, and no recent insect bites. Based on personal experience, I lean toward straightforward cohort definitions instead of complex nested criteria when possible. 
 
 ```{r output=FALSE, message=FALSE, warning=FALSE}
 
@@ -245,6 +274,8 @@ eventCohort <- cohort(
 
 ## Cohort set
 
+The final step in cohort definition is to bundle them in a cohort set object as input to the next section. 
+
 ```{r output=FALSE, message=FALSE, warning=FALSE}
 
 cohortSet <- makeCohortSet(targetCohort, eventCohort)
@@ -252,6 +283,10 @@ cohortSet <- makeCohortSet(targetCohort, eventCohort)
 ```
 
 # Cohort generation 
+
+In my Capr cohort building approach, these concise intuitive function calls have not actually "done" anything in the sense of generating study data. Rather they have returned a set of complex OHDSI SQL queries, which can be put through SqlRender to generate executable SQL in a number of different relational database systems. One could, in theory, simply write all this SQL tediously by hand.
+
+In this section we take the cohort objects generated by Capr, and use them as input to the CohortGenerator functions, which have the side effect of writing cohort data and metadata to the server. 
 
 ```{r output = FALSE, message = FALSE, warning = FALSE, results='hide'}
 
@@ -269,7 +304,7 @@ generateCohortSet(connectionDetails = connectionDetails,
 
 ```
 
-How many entries are in each cohort? 
+How many entries are in each cohort? There is also a convenient `CohortGenerator::cohortCount` function that could be used. 
 
 ```{r}
 
@@ -281,11 +316,13 @@ renderTranslateQuerySql(
    group by cohort_definition_id",
   cohortSchema = cohortSchema,
   cohortTableName = cohortTableName) |>
-  niceTable()
+  kable()
 
 ```
 
 # Incidence rate calculation
+
+There are a few different ways to perform this calculation, which I will express as the number of angioedema cases per 100 person-years at risk. It would be reasonable to calculate it without too much trouble using custom SQL or R functions. But I will use the Hades `CohortIncidence` package and closely follow the thoughtful vignette given to us by the package creator. 
 
 ```{r output=FALSE, message=FALSE, warning=FALSE, results='hide'}
 
@@ -325,12 +362,11 @@ incidenceResults <- executeAnalysis(connectionDetails = connectionDetails,
 
 # Results
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, results='asis'}
 
-sprintf("The incidence rate of angioedema within 1 year after initial lisinopril exposure was %.01f%% (%s/%s)",
-        incidenceResults$incidence_summary$INCIDENCE_PROPORTION_P100P,
-        incidenceResults$incidence_summary$OUTCOMES,
-        incidenceResults$incidence_summary$PERSONS_AT_RISK
+sprintf("The 1-year incidence rate of angioedema after first exposure  
+        to lisinopril was %.01f per 100 person-years",
+        incidenceResults$incidence_summary$INCIDENCE_RATE_P100PY
 )
 
 ```
