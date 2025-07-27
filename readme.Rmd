@@ -49,7 +49,7 @@ connection <- connect(connectionDetails)
 
 ```
 
-# Eunomia "customization" 
+# Eunomia customization
 
 I am using the synthetic Eunomia CDM for testing. But there is a problem... Eunomia was designed for running the model GI bleed study and the very small concept table does not even have an entry for our target and outcome. I will hack Eunomia and insert the concept name "lisinopril" in place of diclofenac, and "angioedema" in place of gastrointestinal hemorrhage. Of course we would never mutate the data in a real CDM. 
 
