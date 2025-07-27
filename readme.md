@@ -110,8 +110,8 @@ renderTranslateExecuteSql(
 # Find standard concept ids
 
 There are two excellent OHDSI options at this point. I could use Atlas
-or Athena to search the standard vocabulary, Atlas to build concept
-sets, define cohorts, then execute the study. I believe Atlas is the
+or Athena to search the standard vocabulary, then Atlas to build concept
+sets, define cohorts, and execute the study. I believe Atlas is the
 approach we should be focusing on to attract researchers into the
 community.
 
