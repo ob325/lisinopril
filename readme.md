@@ -136,7 +136,7 @@ vocabulary_id is “RxNorm,” the domain_id is “Drug,” the concept_class_id
 is “Ingredient,” and the standard_vocabulary column is “S”.
 
 I will use the ontological mappings of the concept_ancestor table to
-obtain all drug exposures containing ingredient lisinopril. The utility
+obtain all drug exposures containing the ingredient lisinopril. The utility
 of this cannot be overstated. In the EHR, the drug exposures of interest
 will be represented by a vast number of generic vs. brand names, doses,
 and combinations with other active ingredients that would take a great
